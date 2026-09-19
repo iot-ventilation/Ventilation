@@ -258,7 +258,7 @@
       <div class="icon">💨</div>
       <div class="title">Smoke Sensor</div>
       <div class="value" id="smoke">0</div>
-      <div class="status normal" id="smokeStatus">SAFE</div>
+      <div class="status normal" id="smokeStatus">ไม่พบควัน</div>
     </div>
   </div>
 
@@ -435,7 +435,7 @@
           tempStatus1.className = "status normal";
           tempStatus1.innerHTML = "NORMAL";
           smokeStatus.className = "status normal";
-          smokeStatus.innerHTML = "SAFE";
+          smokeStatus.innerHTML = "ไม่พบควัน";
         } 
         else {
           online.innerHTML = "🟢 ONLINE";
@@ -471,20 +471,17 @@
             tempStatus1.classList.add("normal");
           }
 
-          // สถานะ Smoke
+          // สถานะ Smoke (เปลี่ยนเป็น ตรวจพบควัน / ไม่พบควัน)
           let smokeAlertType = "normal";
           smokeStatus.className = "status";
-          if (smoke <= 200) {
-            smokeStatus.innerHTML = "SAFE";
-            smokeStatus.classList.add("normal");
-          } else if (smoke <= 500) {
-            smokeStatus.innerHTML = "WARNING";
-            smokeStatus.classList.add("warning");
-            smokeAlertType = "warning";
-          } else {
-            smokeStatus.innerHTML = "DANGER";
+          if (smoke > 300) {
+            smokeStatus.innerHTML = "⚠️ ตรวจพบควัน";
             smokeStatus.classList.add("danger");
             smokeAlertType = "danger";
+          } else {
+            smokeStatus.innerHTML = "ไม่พบควัน";
+            smokeStatus.classList.add("normal");
+            smokeAlertType = "normal";
           }
 
           // บันทึกลงกราฟ Temp 1 และ Smoke ทุกๆ 30 วินาที
