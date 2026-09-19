@@ -140,6 +140,15 @@
       font-size: 14px;
     }
 
+    /* สไตล์เฉพาะสำหรับป้ายสถานะควันให้ตัวใหญ่สวยงามแทนที่ตัวเลขเดิม */
+    .smoke-status-badge {
+      font-size: 20px;
+      padding: 10px 18px;
+      border-radius: 16px;
+      margin-top: 8px;
+      display: inline-block;
+    }
+
     .normal { background: #22c55e; color: #ffffff; }
     .warning { background: #facc15; color: #111827; }
     .danger { background: #ef4444; color: #ffffff; }
@@ -256,9 +265,12 @@
 
     <div class="card">
       <div class="icon">💨</div>
-      <div class="title">Smoke Sensor</div>
-      <div class="value" id="smoke">0</div>
-      <div class="status normal" id="smokeStatus">ไม่พบควัน</div>
+      <div class="title">Smoke Status</div>
+      <!-- ซ่อนตัวเลขดิบไว้ และแสดงแค่ป้ายสถานะ -->
+      <div id="smoke" style="display: none;">0</div>
+      <div>
+        <div class="status normal smoke-status-badge" id="smokeStatus">ไม่พบควัน</div>
+      </div>
     </div>
   </div>
 
@@ -321,7 +333,7 @@
       }
     });
 
-    // กราฟ Smoke
+    // กราฟ Smoke (ยังคงพล็อตค่าตัวเลขจริงตามปกติ)
     const ctxSmoke = document.getElementById('smokeChart').getContext('2d');
     const smokeChart = new Chart(ctxSmoke, {
       type: 'line',
@@ -434,7 +446,7 @@
 
           tempStatus1.className = "status normal";
           tempStatus1.innerHTML = "NORMAL";
-          smokeStatus.className = "status normal";
+          smokeStatus.className = "status normal smoke-status-badge";
           smokeStatus.innerHTML = "ไม่พบควัน";
         } 
         else {
@@ -471,9 +483,9 @@
             tempStatus1.classList.add("normal");
           }
 
-          // สถานะ Smoke (เปลี่ยนเป็น ตรวจพบควัน / ไม่พบควัน)
+          // สถานะ Smoke (แสดงเฉพาะป้ายสถานะ)
           let smokeAlertType = "normal";
-          smokeStatus.className = "status";
+          smokeStatus.className = "status smoke-status-badge";
           if (smoke > 300) {
             smokeStatus.innerHTML = "⚠️ ตรวจพบควัน";
             smokeStatus.classList.add("danger");
@@ -519,7 +531,7 @@
     setInterval(() => {
       flash("temp1");
       flash("volt");
-      flash("smoke");
+      flash("smokeStatus");
     }, 3000);
   </script>
 
