@@ -140,7 +140,6 @@
       font-size: 14px;
     }
 
-    /* สไตล์เฉพาะสำหรับป้ายสถานะควันให้ตัวใหญ่สวยงามแทนที่ตัวเลขเดิม */
     .smoke-status-badge {
       font-size: 20px;
       padding: 10px 18px;
@@ -232,7 +231,7 @@
       <div class="status normal" id="tempStatus1">NORMAL</div>
     </div>
 
-   <div class="card" style="
+    <div class="card" style="
       position: relative;
       background: linear-gradient(rgba(15, 23, 42, 0.5), rgba(15, 23, 42, 0.5)), url('PJ304.jpg');
       background-size: cover;
@@ -266,7 +265,6 @@
     <div class="card">
       <div class="icon">💨</div>
       <div class="title">Smoke Status</div>
-      <!-- ซ่อนตัวเลขดิบไว้ และแสดงแค่ป้ายสถานะ -->
       <div id="smoke" style="display: none;">0</div>
       <div>
         <div class="status normal smoke-status-badge" id="smokeStatus">ไม่พบควัน</div>
@@ -283,7 +281,7 @@
     </div>
 
     <div class="chart-card">
-      <h3>💨 Smoke Level History</h3>
+      <h3>💨 Smoke Level History (PPM)</h3>
       <div class="chart-wrapper">
         <canvas id="smokeChart"></canvas>
       </div>
@@ -299,13 +297,13 @@
     const SCRIPT_URL =
       "https://script.google.com/macros/s/AKfycbzO_0oj5LCJdQT1GHDbr7cgYv81tKY2sNajITdxBFcMvWRD8f-FWfcnF50OVkczhhi4yw/exec";
 
-    const maxDataPoints = 10;
+    const maxDataPoints = 15; // ขยายเก็บประวัติเป็น 15 จุด
     let chartTimerCounter = 0;
 
     const getTextColor = () => document.documentElement.getAttribute("data-theme") === "light" ? "#0f172a" : "#ffffff";
     const getGridColor = () => document.documentElement.getAttribute("data-theme") === "light" ? "#e2e8f0" : "#334155";
 
-    // กราฟ Temperature (เส้นเดียวของ Temp 1)
+    // กราฟ Temperature
     const ctxTemp = document.getElementById('tempChart').getContext('2d');
     const tempChart = new Chart(ctxTemp, {
       type: 'line',
@@ -333,14 +331,14 @@
       }
     });
 
-    // กราฟ Smoke (ยังคงพล็อตค่าตัวเลขจริงตามปกติ)
+    // กราฟ Smoke (ตั้งค่า suggestedMax ปลดล็อกแกน Y ไม่ให้ตันที่ 1)
     const ctxSmoke = document.getElementById('smokeChart').getContext('2d');
     const smokeChart = new Chart(ctxSmoke, {
       type: 'line',
       data: {
         labels: [],
         datasets: [{
-          label: 'Smoke Value',
+          label: 'Smoke (PPM)',
           data: [],
           borderColor: '#3b82f6',
           backgroundColor: 'rgba(59, 130, 246, 0.15)',
@@ -356,15 +354,20 @@
         plugins: { legend: { display: false } },
         scales: {
           x: { ticks: { color: getTextColor }, grid: { color: getGridColor } },
-          y: { ticks: { color: getTextColor }, grid: { color: getGridColor }, beginAtZero: true }
+          y: { 
+            ticks: { color: getTextColor }, 
+            grid: { color: getGridColor }, 
+            beginAtZero: true,
+            suggestedMax: 500 // สเกลแกน Y ขยายอัตโนมัติตาม PPM จริง
+          }
         }
       }
     });
 
     function addChartData(chart, label, value, alertType) {
       if (chart.data.labels.length >= maxDataPoints) {
-        chart.data.labels = [];
-        chart.data.datasets[0].data = [];
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
       }
 
       chart.data.labels.push(label);
@@ -458,14 +461,14 @@
           let t3 = parseFloat(data.temp3 || 0);
           let t4 = parseFloat(data.temp4 || 0);
           let volt = parseFloat(data.volt || 0);
-          let smoke = parseInt(data.smoke || 0);
+          let smoke = parseFloat(data.smoke || 0); // แปลงเป็น Float รองรับทศนิยม PPM
 
           document.getElementById("temp1").innerHTML = t1.toFixed(1) + "°C";
           document.getElementById("temp2").innerHTML = t2.toFixed(1) + "°C";
           document.getElementById("temp3").innerHTML = t3.toFixed(1) + "°C";
           document.getElementById("temp4").innerHTML = t4.toFixed(1) + "°C";
           document.getElementById("volt").innerHTML = volt.toFixed(2) + "V";
-          document.getElementById("smoke").innerHTML = smoke;
+          document.getElementById("smoke").innerHTML = smoke.toFixed(1);
 
           // สถานะ Temp 1
           let tempAlertType = "normal";
@@ -483,27 +486,31 @@
             tempStatus1.classList.add("normal");
           }
 
-          // สถานะ Smoke (แสดงเฉพาะป้ายสถานะ)
+          // สถานะ Smoke PPM
           let smokeAlertType = "normal";
           smokeStatus.className = "status smoke-status-badge";
           if (smoke > 300) {
-            smokeStatus.innerHTML = "⚠️ ตรวจพบควัน";
+            smokeStatus.innerHTML = "⚠️ ควันอันตราย (" + Math.round(smoke) + " ppm)";
             smokeStatus.classList.add("danger");
             smokeAlertType = "danger";
+          } else if (smoke > 100) {
+            smokeStatus.innerHTML = "⚠️ เริ่มมีควัน (" + Math.round(smoke) + " ppm)";
+            smokeStatus.classList.add("warning");
+            smokeAlertType = "warning";
           } else {
-            smokeStatus.innerHTML = "ไม่พบควัน";
+            smokeStatus.innerHTML = "ปกติ (" + smoke.toFixed(1) + " ppm)";
             smokeStatus.classList.add("normal");
             smokeAlertType = "normal";
           }
 
-          // บันทึกลงกราฟ Temp 1 และ Smoke ทุกๆ 30 วินาที
+          // วาดจุดข้อมูลลงกราฟทุก 2 วินาที (จากเดิม 30 วินาที) ตอบสนองทันที
           if (tempChart.data.labels.length === 0) {
             addChartData(tempChart, timeNow, t1, tempAlertType);
             addChartData(smokeChart, timeNow, smoke, smokeAlertType);
             chartTimerCounter = 0;
           } else {
             chartTimerCounter++;
-            if (chartTimerCounter >= 30) {
+            if (chartTimerCounter >= 2) {
               addChartData(tempChart, timeNow, t1, tempAlertType);
               addChartData(smokeChart, timeNow, smoke, smokeAlertType);
               chartTimerCounter = 0;
