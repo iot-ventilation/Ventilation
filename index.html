@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ventilation</title>
+  <title>Ventilation Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   
   <!-- Chart.js CDN -->
@@ -121,13 +121,21 @@
     }
 
     .title {
-      font-size: 16px;
+      font-size: 15px;
       color: var(--text-sub);
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: var(--text-sub);
+      opacity: 0.8;
       margin-bottom: 8px;
     }
 
     .value {
-      font-size: 42px;
+      font-size: 38px;
       font-weight: bold;
       margin-bottom: 10px;
     }
@@ -141,8 +149,8 @@
     }
 
     .smoke-status-badge {
-      font-size: 20px;
-      padding: 10px 18px;
+      font-size: 18px;
+      padding: 8px 16px;
       border-radius: 16px;
       margin-top: 8px;
       display: inline-block;
@@ -167,7 +175,7 @@
     }
 
     .chart-card h3 {
-      font-size: 20px;
+      font-size: 19px;
       color: var(--text-main);
       margin-bottom: 20px;
       display: flex;
@@ -177,7 +185,7 @@
 
     .chart-wrapper {
       position: relative;
-      height: 280px;
+      height: 290px;
       width: 100%;
     }
 
@@ -190,7 +198,7 @@
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 15px;
-      font-size: 18px;
+      font-size: 17px;
       box-shadow: 0 4px 15px var(--shadow);
     }
 
@@ -200,10 +208,10 @@
       .header-left { flex-direction: column; align-items: flex-start; gap: 12px; }
       .header h1 { font-size: 24px; }
       .theme-toggle, .online { width: 100%; text-align: center; justify-content: center; }
-      .value { font-size: 36px; }
+      .value { font-size: 32px; }
       .charts-container { grid-template-columns: 1fr; }
-      .chart-wrapper { height: 220px; }
-      .footer { justify-content: center; font-size: 15px; }
+      .chart-wrapper { height: 230px; }
+      .footer { justify-content: center; font-size: 14px; }
     }
   </style>
 </head>
@@ -222,49 +230,48 @@
     </div>
   </div>
 
-  <!-- Cards แสดงอุณหภูมิ 4 ตัว + Volt + Smoke -->
+  <!-- Cards แสดงอุณหภูมิ 4 จุด + Volt + Smoke -->
   <div class="cards">
     <div class="card" id="cardTemp1">
-      <div class="icon">🌡️</div>
-      <div class="title">Temp 1 (Control)</div>
+      <div class="icon">📦</div>
+      <div class="title">Temp 1: ในกล่องทดสอบ</div>
+      <div class="subtitle">(Test Box Temp)</div>
       <div class="value" id="temp1">0.0°C</div>
       <div class="status normal" id="tempStatus1">NORMAL</div>
     </div>
 
-    <div class="card" style="
-      position: relative;
-      background: linear-gradient(rgba(15, 23, 42, 0.5), rgba(15, 23, 42, 0.5)), url('PJ304.jpg');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      overflow: hidden;
-    ">
-      <div class="icon">🌡️</div>
-      <div class="title" style="color: #cbd5e1; text-shadow: 0 1px 3px rgba(0,0,0,0.8);">Temp 2</div>
-      <div class="value" id="temp2" style="color: #ffffff; text-shadow: 0 2px 5px rgba(0,0,0,0.8);">0.0°C</div>
+    <div class="card" id="cardTemp2">
+      <div class="icon">⚙️</div>
+      <div class="title">Temp 2: Case Motor Temp</div>
+      <div class="subtitle">(วัดที่เปลือกมอเตอร์)</div>
+      <div class="value" id="temp2">0.0°C</div>
     </div>
 
-    <div class="card">
-      <div class="icon">🌡️</div>
-      <div class="title">Temp 3</div>
+    <div class="card" id="cardTemp3">
+      <div class="icon">🌤️</div>
+      <div class="title">Temp 3: Ambient Temp</div>
+      <div class="subtitle">(อุณหภูมิบรรยากาศธรรมชาติ)</div>
       <div class="value" id="temp3">0.0°C</div>
     </div>
 
-    <div class="card">
-      <div class="icon">🌡️</div>
-      <div class="title">Temp 4</div>
+    <div class="card" id="cardTemp4">
+      <div class="icon">🌪️</div>
+      <div class="title">Temp 4: หัวเซลล์ทางเข้าโบลเวอร์</div>
+      <div class="subtitle">(Blower Inlet Temp)</div>
       <div class="value" id="temp4">0.0°C</div>
     </div>
 
     <div class="card">
       <div class="icon">⚡</div>
       <div class="title">Output Voltage</div>
+      <div class="subtitle">(MCP4725 Control Signal)</div>
       <div class="value" id="volt">0.00V</div>
     </div>
 
     <div class="card">
       <div class="icon">💨</div>
       <div class="title">Smoke Status</div>
+      <div class="subtitle">(MQ-2 Gas Sensor)</div>
       <div id="smoke" style="display: none;">0</div>
       <div>
         <div class="status normal smoke-status-badge" id="smokeStatus">ไม่พบควัน</div>
@@ -272,9 +279,10 @@
     </div>
   </div>
 
+  <!-- ส่วนแสดงผลกราฟคู่ -->
   <div class="charts-container">
     <div class="chart-card">
-      <h3>🌡️ Temperature 1 History (°C)</h3>
+      <h3>🌡️ Temperature History 4 จุด (°C)</h3>
       <div class="chart-wrapper">
         <canvas id="tempChart"></canvas>
       </div>
@@ -297,41 +305,85 @@
     const SCRIPT_URL =
       "https://script.google.com/macros/s/AKfycbzO_0oj5LCJdQT1GHDbr7cgYv81tKY2sNajITdxBFcMvWRD8f-FWfcnF50OVkczhhi4yw/exec";
 
-    const maxDataPoints = 15; // ขยายเก็บประวัติเป็น 15 จุด
+    const maxDataPoints = 15;
     let chartTimerCounter = 0;
 
     const getTextColor = () => document.documentElement.getAttribute("data-theme") === "light" ? "#0f172a" : "#ffffff";
     const getGridColor = () => document.documentElement.getAttribute("data-theme") === "light" ? "#e2e8f0" : "#334155";
 
-    // กราฟ Temperature
+    // กราฟอุณหภูมิ 4 จุด
     const ctxTemp = document.getElementById('tempChart').getContext('2d');
     const tempChart = new Chart(ctxTemp, {
       type: 'line',
       data: {
         labels: [],
-        datasets: [{
-          label: 'Temp 1 (°C)',
-          data: [],
-          borderColor: '#22c55e',
-          backgroundColor: 'rgba(34, 197, 94, 0.15)',
-          fill: true,
-          tension: 0.3,
-          borderWidth: 3,
-          pointRadius: 4
-        }]
+        datasets: [
+          {
+            label: 'T1: ในกล่องทดสอบ',
+            data: [],
+            borderColor: '#ef4444', // สีแดง
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            fill: false,
+            tension: 0.3,
+            borderWidth: 2.5,
+            pointRadius: 3
+          },
+          {
+            label: 'T2: Case Motor',
+            data: [],
+            borderColor: '#f97316', // สีส้ม
+            backgroundColor: 'rgba(249, 115, 22, 0.1)',
+            fill: false,
+            tension: 0.3,
+            borderWidth: 2.5,
+            pointRadius: 3
+          },
+          {
+            label: 'T3: Ambient',
+            data: [],
+            borderColor: '#38bdf8', // สีฟ้า
+            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+            fill: false,
+            tension: 0.3,
+            borderWidth: 2.5,
+            pointRadius: 3
+          },
+          {
+            label: 'T4: หัวเซลล์ทางเข้า',
+            data: [],
+            borderColor: '#10b981', // สีเขียว
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            fill: false,
+            tension: 0.3,
+            borderWidth: 2.5,
+            pointRadius: 3
+          }
+        ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: { color: getTextColor, boxWidth: 12, font: { size: 11 } }
+          }
+        },
         scales: {
           x: { ticks: { color: getTextColor }, grid: { color: getGridColor } },
-          y: { ticks: { color: getTextColor }, grid: { color: getGridColor }, beginAtZero: false }
+          y: { 
+            ticks: { color: getTextColor }, 
+            grid: { color: getGridColor }, 
+            beginAtZero: false,
+            title: { display: true, text: '°C', color: getTextColor }
+          }
         }
       }
     });
 
-    // กราฟ Smoke (ตั้งค่า suggestedMax ปลดล็อกแกน Y ไม่ให้ตันที่ 1)
+    // กราฟ Smoke (PPM)
     const ctxSmoke = document.getElementById('smokeChart').getContext('2d');
     const smokeChart = new Chart(ctxSmoke, {
       type: 'line',
@@ -340,8 +392,8 @@
         datasets: [{
           label: 'Smoke (PPM)',
           data: [],
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.15)',
+          borderColor: '#a855f7',
+          backgroundColor: 'rgba(168, 85, 247, 0.18)',
           fill: true,
           tension: 0.3,
           borderWidth: 3,
@@ -351,42 +403,48 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        plugins: {
+          legend: {
+            display: true,
+            labels: { color: getTextColor, boxWidth: 12 }
+          }
+        },
         scales: {
           x: { ticks: { color: getTextColor }, grid: { color: getGridColor } },
           y: { 
             ticks: { color: getTextColor }, 
             grid: { color: getGridColor }, 
             beginAtZero: true,
-            suggestedMax: 500 // สเกลแกน Y ขยายอัตโนมัติตาม PPM จริง
+            suggestedMax: 500,
+            title: { display: true, text: 'PPM', color: getTextColor }
           }
         }
       }
     });
 
-    function addChartData(chart, label, value, alertType) {
-      if (chart.data.labels.length >= maxDataPoints) {
-        chart.data.labels.shift();
-        chart.data.datasets[0].data.shift();
+    // ฟังก์ชันเพิ่มข้อมูลลงกราฟอุณหภูมิ 4 เส้นพร้อมกัน
+    function addTempChartData(timeLabel, t1, t2, t3, t4) {
+      if (tempChart.data.labels.length >= maxDataPoints) {
+        tempChart.data.labels.shift();
+        tempChart.data.datasets.forEach(dataset => dataset.data.shift());
       }
+      tempChart.data.labels.push(timeLabel);
+      tempChart.data.datasets[0].data.push(t1);
+      tempChart.data.datasets[1].data.push(t2);
+      tempChart.data.datasets[2].data.push(t3);
+      tempChart.data.datasets[3].data.push(t4);
+      tempChart.update();
+    }
 
-      chart.data.labels.push(label);
-      chart.data.datasets[0].data.push(value);
-
-      if (chart === tempChart) {
-        if (alertType === "danger") {
-          chart.data.datasets[0].borderColor = '#ef4444';
-          chart.data.datasets[0].backgroundColor = 'rgba(239, 68, 68, 0.2)';
-        } else if (alertType === "warning") {
-          chart.data.datasets[0].borderColor = '#facc15';
-          chart.data.datasets[0].backgroundColor = 'rgba(250, 204, 21, 0.2)';
-        } else {
-          chart.data.datasets[0].borderColor = '#22c55e';
-          chart.data.datasets[0].backgroundColor = 'rgba(34, 197, 94, 0.15)';
-        }
+    // ฟังก์ชันเพิ่มข้อมูลกราฟควัน
+    function addSmokeChartData(timeLabel, smokeVal) {
+      if (smokeChart.data.labels.length >= maxDataPoints) {
+        smokeChart.data.labels.shift();
+        smokeChart.data.datasets[0].data.shift();
       }
-
-      chart.update();
+      smokeChart.data.labels.push(timeLabel);
+      smokeChart.data.datasets[0].data.push(smokeVal);
+      smokeChart.update();
     }
 
     function toggleTheme() {
@@ -408,6 +466,12 @@
         chart.options.scales.x.grid.color = getGridColor();
         chart.options.scales.y.ticks.color = getTextColor();
         chart.options.scales.y.grid.color = getGridColor();
+        if (chart.options.scales.y.title) {
+          chart.options.scales.y.title.color = getTextColor();
+        }
+        if (chart.options.plugins && chart.options.plugins.legend) {
+          chart.options.plugins.legend.labels.color = getTextColor();
+        }
         chart.update();
       });
     }
@@ -461,7 +525,7 @@
           let t3 = parseFloat(data.temp3 || 0);
           let t4 = parseFloat(data.temp4 || 0);
           let volt = parseFloat(data.volt || 0);
-          let smoke = parseFloat(data.smoke || 0); // แปลงเป็น Float รองรับทศนิยม PPM
+          let smoke = parseFloat(data.smoke || 0);
 
           document.getElementById("temp1").innerHTML = t1.toFixed(1) + "°C";
           document.getElementById("temp2").innerHTML = t2.toFixed(1) + "°C";
@@ -470,49 +534,42 @@
           document.getElementById("volt").innerHTML = volt.toFixed(2) + "V";
           document.getElementById("smoke").innerHTML = smoke.toFixed(1);
 
-          // สถานะ Temp 1
-          let tempAlertType = "normal";
+          // เช็กสถานะ Temp 1 (Control)
           tempStatus1.className = "status";
           if (t1 >= 50) {
             tempStatus1.innerHTML = "DANGER";
             tempStatus1.classList.add("danger");
-            tempAlertType = "danger";
           } else if (t1 >= 40) {
             tempStatus1.innerHTML = "WARNING";
             tempStatus1.classList.add("warning");
-            tempAlertType = "warning";
           } else {
             tempStatus1.innerHTML = "NORMAL";
             tempStatus1.classList.add("normal");
           }
 
-          // สถานะ Smoke PPM
-          let smokeAlertType = "normal";
+          // เช็กสถานะ Smoke MQ-2
           smokeStatus.className = "status smoke-status-badge";
           if (smoke > 300) {
             smokeStatus.innerHTML = "⚠️ ควันอันตราย (" + Math.round(smoke) + " ppm)";
             smokeStatus.classList.add("danger");
-            smokeAlertType = "danger";
           } else if (smoke > 100) {
             smokeStatus.innerHTML = "⚠️ เริ่มมีควัน (" + Math.round(smoke) + " ppm)";
             smokeStatus.classList.add("warning");
-            smokeAlertType = "warning";
           } else {
             smokeStatus.innerHTML = "ปกติ (" + smoke.toFixed(1) + " ppm)";
             smokeStatus.classList.add("normal");
-            smokeAlertType = "normal";
           }
 
-          // วาดจุดข้อมูลลงกราฟทุก 2 วินาที (จากเดิม 30 วินาที) ตอบสนองทันที
+          // อัปเดตกราฟทุกๆ 2 วินาที
           if (tempChart.data.labels.length === 0) {
-            addChartData(tempChart, timeNow, t1, tempAlertType);
-            addChartData(smokeChart, timeNow, smoke, smokeAlertType);
+            addTempChartData(timeNow, t1, t2, t3, t4);
+            addSmokeChartData(timeNow, smoke);
             chartTimerCounter = 0;
           } else {
             chartTimerCounter++;
             if (chartTimerCounter >= 2) {
-              addChartData(tempChart, timeNow, t1, tempAlertType);
-              addChartData(smokeChart, timeNow, smoke, smokeAlertType);
+              addTempChartData(timeNow, t1, t2, t3, t4);
+              addSmokeChartData(timeNow, smoke);
               chartTimerCounter = 0;
             }
           }
