@@ -160,7 +160,6 @@
     .warning { background: #facc15; color: #111827; }
     .danger { background: #ef4444; color: #ffffff; }
 
-    /* ปรับ Layout กราฟ 5 ตัว: 2 คอลัมน์บนจอใหญ่ และควันเต็มแถว */
     .charts-container {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
@@ -249,7 +248,7 @@
     <div class="card" id="cardTemp2">
       <div class="icon">⚙️</div>
       <div class="title">Temp 2: Case Motor Temp</div>
-      <div class="subtitle">(วัดที่เปลือกมอเตอร์)</div>
+      <div class="subtitle">(วัดที่เคสมอเตอร์)</div>
       <div class="value" id="temp2">0.0°C</div>
     </div>
 
@@ -285,41 +284,41 @@
     </div>
   </div>
 
-  <!-- ส่วนแสดงผล 5 กราฟแยกเดี่ยว -->
+  <!-- ส่วนแสดงผล 5 กราฟแยกเดี่ยว (ชื่อกราฟอุณหภูมิเป็นภาษาไทย) -->
   <div class="charts-container">
-    <!-- กราฟที่ 1: Temp 1 -->
+    <!-- กราฟที่ 1 -->
     <div class="chart-card">
-      <h3>📦 Temp 1: ในกล่องทดสอบ (°C)</h3>
+      <h3>📦 อุณหภูมิในกล่องทดสอบ (°C)</h3>
       <div class="chart-wrapper">
         <canvas id="tempChart1"></canvas>
       </div>
     </div>
 
-    <!-- กราฟที่ 2: Temp 2 -->
+    <!-- กราฟที่ 2 -->
     <div class="chart-card">
-      <h3>⚙️ Temp 2: Case Motor Temp (°C)</h3>
+      <h3>⚙️ อุณหภูมิที่เคสมอเตอร์ (°C)</h3>
       <div class="chart-wrapper">
         <canvas id="tempChart2"></canvas>
       </div>
     </div>
 
-    <!-- กราฟที่ 3: Temp 3 -->
+    <!-- กราฟที่ 3 -->
     <div class="chart-card">
-      <h3>🌤️ Temp 3: Ambient Temp (°C)</h3>
+      <h3>🌤️ อุณหภูมิภายนอก (°C)</h3>
       <div class="chart-wrapper">
         <canvas id="tempChart3"></canvas>
       </div>
     </div>
 
-    <!-- กราฟที่ 4: Temp 4 -->
+    <!-- กราฟที่ 4 -->
     <div class="chart-card">
-      <h3>🌪️ Temp 4: หัวเซลล์ทางเข้าโบลเวอร์ (°C)</h3>
+      <h3>🌪️ อุณหภูมิหัวเซลล์ทางเข้าโบลเวอร์ (°C)</h3>
       <div class="chart-wrapper">
         <canvas id="tempChart4"></canvas>
       </div>
     </div>
 
-    <!-- กราฟที่ 5: Smoke (ขยายเต็มหน้าจอให้อ่านง่าย) -->
+    <!-- กราฟที่ 5: Smoke (คงชื่อเดิมไว้) -->
     <div class="chart-card full-width">
       <h3>💨 Smoke Level History (MQ-2 Sensor PPM)</h3>
       <div class="chart-wrapper">
@@ -343,7 +342,7 @@
     const getTextColor = () => document.documentElement.getAttribute("data-theme") === "light" ? "#0f172a" : "#ffffff";
     const getGridColor = () => document.documentElement.getAttribute("data-theme") === "light" ? "#e2e8f0" : "#334155";
 
-    // ฟังก์ชันช่วยสร้างโครงกราฟเส้นเดี่ยวแบบประหยัดโค้ด
+    // ฟังก์ชันช่วยสร้างกราฟเส้นเดี่ยว
     function createSingleLineChart(canvasId, label, colorHex, bgRgba, yUnit = '°C', beginAtZero = false) {
       const ctx = document.getElementById(canvasId).getContext('2d');
       return new Chart(ctx, {
@@ -383,13 +382,13 @@
       });
     }
 
-    // สร้างอินสแตนซ์กราฟทั้ง 5 ตัว
-    const tempChart1 = createSingleLineChart('tempChart1', 'Temp 1 (°C)', '#ef4444', 'rgba(239, 68, 68, 0.15)');
-    const tempChart2 = createSingleLineChart('tempChart2', 'Temp 2 (°C)', '#f97316', 'rgba(249, 115, 22, 0.15)');
-    const tempChart3 = createSingleLineChart('tempChart3', 'Temp 3 (°C)', '#38bdf8', 'rgba(56, 189, 248, 0.15)');
-    const tempChart4 = createSingleLineChart('tempChart4', 'Temp 4 (°C)', '#10b981', 'rgba(16, 185, 129, 0.15)');
+    // สร้างอินสแตนซ์กราฟทั้ง 5 ตัว (กำหนด Label เส้นกำกับเป็นภาษาไทย)
+    const tempChart1 = createSingleLineChart('tempChart1', 'อุณหภูมิในกล่องทดสอบ (°C)', '#ef4444', 'rgba(239, 68, 68, 0.15)');
+    const tempChart2 = createSingleLineChart('tempChart2', 'อุณหภูมิที่เคสมอเตอร์ (°C)', '#f97316', 'rgba(249, 115, 22, 0.15)');
+    const tempChart3 = createSingleLineChart('tempChart3', 'อุณหภูมิภายนอก (°C)', '#38bdf8', 'rgba(56, 189, 248, 0.15)');
+    const tempChart4 = createSingleLineChart('tempChart4', 'อุณหภูมิหัวเซลล์ทางเข้าโบลเวอร์ (°C)', '#10b981', 'rgba(16, 185, 129, 0.15)');
     
-    // กราฟ Smoke (ตั้งค่า suggestedMax แกน Y)
+    // กราฟ Smoke (PPM)
     const ctxSmoke = document.getElementById('smokeChart').getContext('2d');
     const smokeChart = new Chart(ctxSmoke, {
       type: 'line',
@@ -430,7 +429,6 @@
 
     const allCharts = [tempChart1, tempChart2, tempChart3, tempChart4, smokeChart];
 
-    // ฟังก์ชันเพิ่มข้อมูลลงในกราฟแต่ละตัว
     function pushDataToChart(chart, timeLabel, value) {
       if (chart.data.labels.length >= maxDataPoints) {
         chart.data.labels.shift();
@@ -550,7 +548,7 @@
             smokeStatus.innerHTML = "⚠️ เริ่มมีควัน (" + Math.round(smoke) + " ppm)";
             smokeStatus.classList.add("warning");
           } else {
-            smokeStatus.innerHTML = "ปกติ (" + smoke.toFixed(1) + " ppm)";
+            smokeStatus.innerHTML = "ไม่พบควัน (" + smoke.toFixed(1) + " ppm)";
             smokeStatus.classList.add("normal");
           }
 
