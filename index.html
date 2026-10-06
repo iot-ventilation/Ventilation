@@ -160,9 +160,10 @@
     .warning { background: #facc15; color: #111827; }
     .danger { background: #ef4444; color: #ffffff; }
 
+    /* ปรับ Layout กราฟ 5 ตัว: 2 คอลัมน์บนจอใหญ่ และควันเต็มแถว */
     .charts-container {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
       gap: 25px;
       margin-bottom: 35px;
     }
@@ -174,10 +175,14 @@
       box-shadow: 0 8px 20px var(--shadow);
     }
 
+    .chart-card.full-width {
+      grid-column: 1 / -1;
+    }
+
     .chart-card h3 {
-      font-size: 19px;
+      font-size: 18px;
       color: var(--text-main);
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       display: flex;
       align-items: center;
       gap: 10px;
@@ -185,7 +190,7 @@
 
     .chart-wrapper {
       position: relative;
-      height: 290px;
+      height: 250px;
       width: 100%;
     }
 
@@ -210,7 +215,8 @@
       .theme-toggle, .online { width: 100%; text-align: center; justify-content: center; }
       .value { font-size: 32px; }
       .charts-container { grid-template-columns: 1fr; }
-      .chart-wrapper { height: 230px; }
+      .chart-card.full-width { grid-column: auto; }
+      .chart-wrapper { height: 210px; }
       .footer { justify-content: center; font-size: 14px; }
     }
   </style>
@@ -279,17 +285,43 @@
     </div>
   </div>
 
-  <!-- ส่วนแสดงผลกราฟคู่ -->
+  <!-- ส่วนแสดงผล 5 กราฟแยกเดี่ยว -->
   <div class="charts-container">
+    <!-- กราฟที่ 1: Temp 1 -->
     <div class="chart-card">
-      <h3>🌡️ Temperature History 4 จุด (°C)</h3>
+      <h3>📦 Temp 1: ในกล่องทดสอบ (°C)</h3>
       <div class="chart-wrapper">
-        <canvas id="tempChart"></canvas>
+        <canvas id="tempChart1"></canvas>
       </div>
     </div>
 
+    <!-- กราฟที่ 2: Temp 2 -->
     <div class="chart-card">
-      <h3>💨 Smoke Level History (PPM)</h3>
+      <h3>⚙️ Temp 2: Case Motor Temp (°C)</h3>
+      <div class="chart-wrapper">
+        <canvas id="tempChart2"></canvas>
+      </div>
+    </div>
+
+    <!-- กราฟที่ 3: Temp 3 -->
+    <div class="chart-card">
+      <h3>🌤️ Temp 3: Ambient Temp (°C)</h3>
+      <div class="chart-wrapper">
+        <canvas id="tempChart3"></canvas>
+      </div>
+    </div>
+
+    <!-- กราฟที่ 4: Temp 4 -->
+    <div class="chart-card">
+      <h3>🌪️ Temp 4: หัวเซลล์ทางเข้าโบลเวอร์ (°C)</h3>
+      <div class="chart-wrapper">
+        <canvas id="tempChart4"></canvas>
+      </div>
+    </div>
+
+    <!-- กราฟที่ 5: Smoke (ขยายเต็มหน้าจอให้อ่านง่าย) -->
+    <div class="chart-card full-width">
+      <h3>💨 Smoke Level History (MQ-2 Sensor PPM)</h3>
       <div class="chart-wrapper">
         <canvas id="smokeChart"></canvas>
       </div>
@@ -311,79 +343,53 @@
     const getTextColor = () => document.documentElement.getAttribute("data-theme") === "light" ? "#0f172a" : "#ffffff";
     const getGridColor = () => document.documentElement.getAttribute("data-theme") === "light" ? "#e2e8f0" : "#334155";
 
-    // กราฟอุณหภูมิ 4 จุด
-    const ctxTemp = document.getElementById('tempChart').getContext('2d');
-    const tempChart = new Chart(ctxTemp, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [
-          {
-            label: 'T1: ในกล่องทดสอบ',
+    // ฟังก์ชันช่วยสร้างโครงกราฟเส้นเดี่ยวแบบประหยัดโค้ด
+    function createSingleLineChart(canvasId, label, colorHex, bgRgba, yUnit = '°C', beginAtZero = false) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      return new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: label,
             data: [],
-            borderColor: '#ef4444', // สีแดง
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            fill: false,
+            borderColor: colorHex,
+            backgroundColor: bgRgba,
+            fill: true,
             tension: 0.3,
             borderWidth: 2.5,
-            pointRadius: 3
-          },
-          {
-            label: 'T2: Case Motor',
-            data: [],
-            borderColor: '#f97316', // สีส้ม
-            backgroundColor: 'rgba(249, 115, 22, 0.1)',
-            fill: false,
-            tension: 0.3,
-            borderWidth: 2.5,
-            pointRadius: 3
-          },
-          {
-            label: 'T3: Ambient',
-            data: [],
-            borderColor: '#38bdf8', // สีฟ้า
-            backgroundColor: 'rgba(56, 189, 248, 0.1)',
-            fill: false,
-            tension: 0.3,
-            borderWidth: 2.5,
-            pointRadius: 3
-          },
-          {
-            label: 'T4: หัวเซลล์ทางเข้า',
-            data: [],
-            borderColor: '#10b981', // สีเขียว
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            fill: false,
-            tension: 0.3,
-            borderWidth: 2.5,
-            pointRadius: 3
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-          legend: {
-            display: true,
-            position: 'top',
-            labels: { color: getTextColor, boxWidth: 12, font: { size: 11 } }
-          }
+            pointRadius: 3.5
+          }]
         },
-        scales: {
-          x: { ticks: { color: getTextColor }, grid: { color: getGridColor } },
-          y: { 
-            ticks: { color: getTextColor }, 
-            grid: { color: getGridColor }, 
-            beginAtZero: false,
-            title: { display: true, text: '°C', color: getTextColor }
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              labels: { color: getTextColor, boxWidth: 12, font: { size: 12 } }
+            }
+          },
+          scales: {
+            x: { ticks: { color: getTextColor }, grid: { color: getGridColor } },
+            y: {
+              ticks: { color: getTextColor },
+              grid: { color: getGridColor },
+              beginAtZero: beginAtZero,
+              title: { display: true, text: yUnit, color: getTextColor }
+            }
           }
         }
-      }
-    });
+      });
+    }
 
-    // กราฟ Smoke (PPM)
+    // สร้างอินสแตนซ์กราฟทั้ง 5 ตัว
+    const tempChart1 = createSingleLineChart('tempChart1', 'Temp 1 (°C)', '#ef4444', 'rgba(239, 68, 68, 0.15)');
+    const tempChart2 = createSingleLineChart('tempChart2', 'Temp 2 (°C)', '#f97316', 'rgba(249, 115, 22, 0.15)');
+    const tempChart3 = createSingleLineChart('tempChart3', 'Temp 3 (°C)', '#38bdf8', 'rgba(56, 189, 248, 0.15)');
+    const tempChart4 = createSingleLineChart('tempChart4', 'Temp 4 (°C)', '#10b981', 'rgba(16, 185, 129, 0.15)');
+    
+    // กราฟ Smoke (ตั้งค่า suggestedMax แกน Y)
     const ctxSmoke = document.getElementById('smokeChart').getContext('2d');
     const smokeChart = new Chart(ctxSmoke, {
       type: 'line',
@@ -422,29 +428,17 @@
       }
     });
 
-    // ฟังก์ชันเพิ่มข้อมูลลงกราฟอุณหภูมิ 4 เส้นพร้อมกัน
-    function addTempChartData(timeLabel, t1, t2, t3, t4) {
-      if (tempChart.data.labels.length >= maxDataPoints) {
-        tempChart.data.labels.shift();
-        tempChart.data.datasets.forEach(dataset => dataset.data.shift());
-      }
-      tempChart.data.labels.push(timeLabel);
-      tempChart.data.datasets[0].data.push(t1);
-      tempChart.data.datasets[1].data.push(t2);
-      tempChart.data.datasets[2].data.push(t3);
-      tempChart.data.datasets[3].data.push(t4);
-      tempChart.update();
-    }
+    const allCharts = [tempChart1, tempChart2, tempChart3, tempChart4, smokeChart];
 
-    // ฟังก์ชันเพิ่มข้อมูลกราฟควัน
-    function addSmokeChartData(timeLabel, smokeVal) {
-      if (smokeChart.data.labels.length >= maxDataPoints) {
-        smokeChart.data.labels.shift();
-        smokeChart.data.datasets[0].data.shift();
+    // ฟังก์ชันเพิ่มข้อมูลลงในกราฟแต่ละตัว
+    function pushDataToChart(chart, timeLabel, value) {
+      if (chart.data.labels.length >= maxDataPoints) {
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
       }
-      smokeChart.data.labels.push(timeLabel);
-      smokeChart.data.datasets[0].data.push(smokeVal);
-      smokeChart.update();
+      chart.data.labels.push(timeLabel);
+      chart.data.datasets[0].data.push(value);
+      chart.update();
     }
 
     function toggleTheme() {
@@ -461,7 +455,7 @@
         localStorage.setItem("theme", "light");
       }
 
-      [tempChart, smokeChart].forEach(chart => {
+      allCharts.forEach(chart => {
         chart.options.scales.x.ticks.color = getTextColor();
         chart.options.scales.x.grid.color = getGridColor();
         chart.options.scales.y.ticks.color = getTextColor();
@@ -560,16 +554,22 @@
             smokeStatus.classList.add("normal");
           }
 
-          // อัปเดตกราฟทุกๆ 2 วินาที
-          if (tempChart.data.labels.length === 0) {
-            addTempChartData(timeNow, t1, t2, t3, t4);
-            addSmokeChartData(timeNow, smoke);
+          // พล็อตข้อมูลทั้ง 5 กราฟพร้อมกันทุกๆ 2 วินาที
+          if (tempChart1.data.labels.length === 0) {
+            pushDataToChart(tempChart1, timeNow, t1);
+            pushDataToChart(tempChart2, timeNow, t2);
+            pushDataToChart(tempChart3, timeNow, t3);
+            pushDataToChart(tempChart4, timeNow, t4);
+            pushDataToChart(smokeChart, timeNow, smoke);
             chartTimerCounter = 0;
           } else {
             chartTimerCounter++;
             if (chartTimerCounter >= 2) {
-              addTempChartData(timeNow, t1, t2, t3, t4);
-              addSmokeChartData(timeNow, smoke);
+              pushDataToChart(tempChart1, timeNow, t1);
+              pushDataToChart(tempChart2, timeNow, t2);
+              pushDataToChart(tempChart3, timeNow, t3);
+              pushDataToChart(tempChart4, timeNow, t4);
+              pushDataToChart(smokeChart, timeNow, smoke);
               chartTimerCounter = 0;
             }
           }
