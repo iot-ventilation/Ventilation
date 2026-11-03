@@ -279,12 +279,12 @@
       <div class="subtitle">(MQ-2 Gas Sensor)</div>
       <div id="smoke" style="display: none;">0</div>
       <div>
-        <div class="status normal smoke-status-badge" id="smokeStatus">ไม่พบควัน</div>
+        <div class="status normal smoke-status-badge" id="smokeStatus">SAFE (0%)</div>
       </div>
     </div>
   </div>
 
-  <!-- ส่วนแสดงผล 5 กราฟแยกเดี่ยว (ชื่อกราฟอุณหภูมิเป็นภาษาไทย) -->
+  <!-- ส่วนแสดงผล 5 กราฟแยกเดี่ยว -->
   <div class="charts-container">
     <!-- กราฟที่ 1 -->
     <div class="chart-card">
@@ -318,9 +318,9 @@
       </div>
     </div>
 
-    <!-- กราฟที่ 5: Smoke (คงชื่อเดิมไว้) -->
+    <!-- กราฟที่ 5: Smoke (%) -->
     <div class="chart-card full-width">
-      <h3>💨 Smoke Level History (MQ-2 Sensor PPM)</h3>
+      <h3>💨 Smoke Level History (MQ-2 Sensor %)</h3>
       <div class="chart-wrapper">
         <canvas id="smokeChart"></canvas>
       </div>
@@ -341,6 +341,36 @@
 
     const getTextColor = () => document.documentElement.getAttribute("data-theme") === "light" ? "#0f172a" : "#ffffff";
     const getGridColor = () => document.documentElement.getAttribute("data-theme") === "light" ? "#e2e8f0" : "#334155";
+
+    // ฟังก์ชันคำนวณ % และสถานะจากค่า ADC ดิบของ MQ-2
+    function calculateSmokeMetrics(adcValue) {
+      let percent = 0;
+      let statusText = "SAFE";
+      let statusClass = "normal";
+
+      if (adcValue < 20) {
+        percent = 0;
+      } else if (adcValue >= 50) {
+        percent = 100;
+      } else {
+        // เทียบบัญญัติไตรยางศ์ช่วง 19 = 0% ถึง 50 = 100%
+        percent = Math.round(((adcValue - 19) / (50 - 19)) * 100);
+      }
+
+      // ตรวจสอบเกณฑ์สถานะ
+      if (percent >= 83) {
+        statusText = "DANGER";
+        statusClass = "danger";
+      } else if (percent >= 3) {
+        statusText = "WARN";
+        statusClass = "warning";
+      } else {
+        statusText = "SAFE";
+        statusClass = "normal";
+      }
+
+      return { percent, statusText, statusClass };
+    }
 
     // ฟังก์ชันช่วยสร้างกราฟเส้นเดี่ยว
     function createSingleLineChart(canvasId, label, colorHex, bgRgba, yUnit = '°C', beginAtZero = false) {
@@ -382,20 +412,20 @@
       });
     }
 
-    // สร้างอินสแตนซ์กราฟทั้ง 5 ตัว (กำหนด Label เส้นกำกับเป็นภาษาไทย)
+    // สร้างอินสแตนซ์กราฟทั้ง 4 ตัวของอุณหภูมิ
     const tempChart1 = createSingleLineChart('tempChart1', 'อุณหภูมิในกล่องทดสอบ (°C)', '#ef4444', 'rgba(239, 68, 68, 0.15)');
     const tempChart2 = createSingleLineChart('tempChart2', 'อุณหภูมิที่เคสมอเตอร์ (°C)', '#f97316', 'rgba(249, 115, 22, 0.15)');
     const tempChart3 = createSingleLineChart('tempChart3', 'อุณหภูมิภายนอก (°C)', '#38bdf8', 'rgba(56, 189, 248, 0.15)');
     const tempChart4 = createSingleLineChart('tempChart4', 'อุณหภูมิหัวเซลล์ทางเข้าโบลเวอร์ (°C)', '#10b981', 'rgba(16, 185, 129, 0.15)');
     
-    // กราฟ Smoke (PPM)
+    // กราฟ Smoke (%) ล็อคช่วงแกน Y ที่ 0-100%
     const ctxSmoke = document.getElementById('smokeChart').getContext('2d');
     const smokeChart = new Chart(ctxSmoke, {
       type: 'line',
       data: {
         labels: [],
         datasets: [{
-          label: 'Smoke (PPM)',
+          label: 'Smoke (%)',
           data: [],
           borderColor: '#a855f7',
           backgroundColor: 'rgba(168, 85, 247, 0.18)',
@@ -417,11 +447,15 @@
         scales: {
           x: { ticks: { color: getTextColor }, grid: { color: getGridColor } },
           y: { 
-            ticks: { color: getTextColor }, 
+            min: 0,
+            max: 100,
+            ticks: { 
+              color: getTextColor,
+              callback: function(value) { return value + '%'; }
+            }, 
             grid: { color: getGridColor }, 
             beginAtZero: true,
-            suggestedMax: 500,
-            title: { display: true, text: 'PPM', color: getTextColor }
+            title: { display: true, text: '%', color: getTextColor }
           }
         }
       }
@@ -506,7 +540,7 @@
           tempStatus1.className = "status normal";
           tempStatus1.innerHTML = "NORMAL";
           smokeStatus.className = "status normal smoke-status-badge";
-          smokeStatus.innerHTML = "ไม่พบควัน";
+          smokeStatus.innerHTML = "SAFE (0%)";
         } 
         else {
           online.innerHTML = "🟢 ONLINE";
@@ -517,14 +551,14 @@
           let t3 = parseFloat(data.temp3 || 0);
           let t4 = parseFloat(data.temp4 || 0);
           let volt = parseFloat(data.volt || 0);
-          let smoke = parseFloat(data.smoke || 0);
+          let rawSmokeAdc = parseFloat(data.smoke || 0);
 
           document.getElementById("temp1").innerHTML = t1.toFixed(1) + "°C";
           document.getElementById("temp2").innerHTML = t2.toFixed(1) + "°C";
           document.getElementById("temp3").innerHTML = t3.toFixed(1) + "°C";
           document.getElementById("temp4").innerHTML = t4.toFixed(1) + "°C";
           document.getElementById("volt").innerHTML = volt.toFixed(2) + "V";
-          document.getElementById("smoke").innerHTML = smoke.toFixed(1);
+          document.getElementById("smoke").innerHTML = rawSmokeAdc;
 
           // เช็กสถานะ Temp 1 (Control)
           tempStatus1.className = "status";
@@ -539,26 +573,25 @@
             tempStatus1.classList.add("normal");
           }
 
-          // เช็กสถานะ Smoke MQ-2
-          smokeStatus.className = "status smoke-status-badge";
-          if (smoke > 300) {
-            smokeStatus.innerHTML = "⚠️ ควันอันตราย (" + Math.round(smoke) + " ppm)";
-            smokeStatus.classList.add("danger");
-          } else if (smoke > 100) {
-            smokeStatus.innerHTML = "⚠️ เริ่มมีควัน (" + Math.round(smoke) + " ppm)";
-            smokeStatus.classList.add("warning");
+          // ประมวลผลและเช็กสถานะ Smoke MQ-2
+          let smokeMetrics = calculateSmokeMetrics(rawSmokeAdc);
+          smokeStatus.className = "status smoke-status-badge " + smokeMetrics.statusClass;
+          
+          if (smokeMetrics.statusClass === "danger") {
+            smokeStatus.innerHTML = `⚠️ DANGER (${smokeMetrics.percent}%)`;
+          } else if (smokeMetrics.statusClass === "warning") {
+            smokeStatus.innerHTML = `⚠️ WARN (${smokeMetrics.percent}%)`;
           } else {
-            smokeStatus.innerHTML = "ไม่พบควัน (" + smoke.toFixed(1) + " ppm)";
-            smokeStatus.classList.add("normal");
+            smokeStatus.innerHTML = `SAFE (${smokeMetrics.percent}%)`;
           }
 
-          // พล็อตข้อมูลทั้ง 5 กราฟพร้อมกันทุกๆ 2 วินาที
+          // พล็อตข้อมูลทั้ง 5 กราฟพร้อมกันทุกๆ 2 วินาที (Smoke พล็อตเป็น %)
           if (tempChart1.data.labels.length === 0) {
             pushDataToChart(tempChart1, timeNow, t1);
             pushDataToChart(tempChart2, timeNow, t2);
             pushDataToChart(tempChart3, timeNow, t3);
             pushDataToChart(tempChart4, timeNow, t4);
-            pushDataToChart(smokeChart, timeNow, smoke);
+            pushDataToChart(smokeChart, timeNow, smokeMetrics.percent);
             chartTimerCounter = 0;
           } else {
             chartTimerCounter++;
@@ -567,7 +600,7 @@
               pushDataToChart(tempChart2, timeNow, t2);
               pushDataToChart(tempChart3, timeNow, t3);
               pushDataToChart(tempChart4, timeNow, t4);
-              pushDataToChart(smokeChart, timeNow, smoke);
+              pushDataToChart(smokeChart, timeNow, smokeMetrics.percent);
               chartTimerCounter = 0;
             }
           }
